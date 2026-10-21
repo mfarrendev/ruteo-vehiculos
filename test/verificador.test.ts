@@ -1,9 +1,11 @@
 /*
- * Medición (2026-10-20): se quitó a mano la comprobación de capacidad en
- * src/verificador.ts (la línea "carga ... supera la capacidad"). Cayeron 2 de
- * 9 pruebas de este archivo ("rechaza sobrecarga" y "rechaza cada mutación de
- * una solución real", que incluye la mutación de fusión de rutas). Con la
- * comprobación de "cliente visitado N veces" quitada cayeron otras 2 de 9.
+ * Medición (2026-10-20, arnés que exige que corran las 9 pruebas):
+ *  - sin la comprobación de capacidad en src/verificador.ts caen 1 de 9
+ *    ("rechaza sobrecarga"). La mutación "fusionar todas las rutas" de la
+ *    prueba con una solución real NO la detecta, porque esa fusión rompe
+ *    también ventanas; por eso existe la prueba a mano de sobrecarga.
+ *  - sin la comprobación de clientes repetidos caen 1 de 9 ("rechaza clientes
+ *    repetidos, faltantes e inexistentes").
  * Se revirtió y vuelven las 9.
  */
 import { describe, expect, it } from "vitest";

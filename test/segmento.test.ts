@@ -1,14 +1,17 @@
 /*
- * Medición (2026-10-20): en src/segmento.ts se cambió la espera de la
- * concatenación por 0 ("const espera = 0"). Cayeron 2 de 3 pruebas de este
- * archivo (las dos que comparan contra la simulación directa); la de
- * prefijos/sufijos sigue en verde porque es consistente consigo misma, y por
- * eso las otras dos existen. Se revirtió y vuelven las 3.
+ * Medición (2026-10-20, arnés que exige que corran las 5 pruebas):
+ *  - violación de ventana anulada en concatenar ("const viol = 0"): caen 4 de 5.
+ *  - l sin desplazar por delta ("Math.min(b.l, a.l)"): caen 2 de 5.
+ *  - espera anulada ("const espera = 0"): caen 0 de 5, y es correcto: es una
+ *    mutación equivalente para este proyecto. La espera que se deja de sumar a
+ *    dur aparece en e, y e + dur, tw y l no cambian; solo importaría si hubiera
+ *    un tope de duración de ruta, que el modelo no tiene.
+ * Se revirtió y vuelven las 5.
  */
 import { describe, expect, it } from "vitest";
 import { crearAleatorio } from "../src/aleatorio.js";
 import { generarInstancia } from "../src/generador.js";
-import type { Instancia } from "../src/instancia.js";
+import { crearInstancia, type Instancia } from "../src/instancia.js";
 import { factible, indexarRuta, segmentoDeSecuencia, unir } from "../src/segmento.js";
 import { verificar } from "../src/verificador.js";
 
@@ -65,6 +68,38 @@ describe("concatenación de segmentos", () => {
         const s = unir(inst, ruta.pre[corte]!, segmentoDeSecuencia(inst, medio), ruta.suf[corte + 1]!);
         const esperado = [...ids.slice(0, corte), ...medio, ...ids.slice(corte, 4)];
         expect(factible(inst, s)).toBe(simular(inst, esperado).ok);
+      }
+    }
+  });
+
+  it("cuenta la espera forzada cuando la salida no se puede atrasar", () => {
+    // A cierra temprano (no se puede salir tarde del depósito) y B abre tarde:
+    // el vehículo tiene que esperar en B, y esa espera es parte de la duración.
+    const inst = crearInstancia("espera", 100, 2, [
+      { id: 0, x: 0, y: 0, demanda: 0, inicio: 0, fin: 500, servicio: 0 },
+      { id: 1, x: 10, y: 0, demanda: 1, inicio: 10, fin: 12, servicio: 5 },
+      { id: 2, x: 20, y: 0, demanda: 1, inicio: 100, fin: 110, servicio: 5 },
+    ]);
+    const s = segmentoDeSecuencia(inst, [0, 1, 2, 0]);
+    expect(factible(inst, s)).toBe(true);
+    // Sale en 0..2, llega a B en ≤27, espera hasta 100, sirve 5, vuelve 20 → 125.
+    expect(s.e + s.dur).toBeCloseTo(simular(inst, [1, 2]).fin, 9);
+    expect(s.e + s.dur).toBeCloseTo(125, 9);
+    // Con B cerrando antes de que el regreso quepa en el horizonte, infactible.
+    const corta = crearInstancia("corta", 100, 2, [{ ...inst.nodos[0]!, fin: 120 }, ...inst.nodos.slice(1)]);
+    expect(factible(corta, segmentoDeSecuencia(corta, [0, 1, 2, 0]))).toBe(false);
+  });
+
+  it("da lo mismo asociar la concatenación por la izquierda o por la derecha", () => {
+    const rnd = crearAleatorio(13);
+    for (const inst of instancias) {
+      for (let k = 0; k < 200; k++) {
+        const ids = [0, ...rnd.barajar(Array.from({ length: 30 }, (_, i) => i + 1)).slice(0, 5), 0];
+        const izq = segmentoDeSecuencia(inst, ids);
+        const corte = rnd.entero(1, ids.length - 1);
+        const der = unir(inst, segmentoDeSecuencia(inst, ids.slice(0, corte)), segmentoDeSecuencia(inst, ids.slice(corte)));
+        expect(der.tw > 1e-9).toBe(izq.tw > 1e-9);
+        if (izq.tw <= 1e-9) expect(der.e + der.dur).toBeCloseTo(izq.e + izq.dur, 6);
       }
     }
   });
