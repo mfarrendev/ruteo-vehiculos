@@ -3,6 +3,8 @@
 Solver de ruteo de vehículos con capacidad y ventanas de tiempo (CVRPTW) en
 TypeScript, sin dependencias de runtime.
 
+**Demo en vivo:** [mfarrendev.github.io/ruteo-vehiculos](https://mfarrendev.github.io/ruteo-vehiculos/), una solución de 100 clientes dibujada en el visor.
+
 ## El problema
 
 Una flota de vehículos iguales sale de un depósito, atiende a cada cliente
