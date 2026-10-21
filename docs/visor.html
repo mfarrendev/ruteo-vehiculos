@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visor de rutas</title>
+<style>
+  :root { --fondo: #fafaf8; --texto: #222; --suave: #777; --borde: #ddd; }
+  @media (prefers-color-scheme: dark) { :root { --fondo: #1b1b1d; --texto: #eee; --suave: #999; --borde: #333; } }
+  body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: var(--fondo); color: var(--texto); }
+  main { max-width: 980px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  #resumen { color: var(--suave); margin-bottom: 12px; }
+  #lienzo { width: 100%; height: auto; border: 1px solid var(--borde); border-radius: 8px; background: var(--fondo); }
+  #rutas { columns: 2 260px; padding-left: 18px; font-variant-numeric: tabular-nums; }
+  #rutas li { break-inside: avoid; margin-bottom: 4px; cursor: default; }
+  .muestra { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+  .error { color: #b00020; }
+  svg .ruta { fill: none; stroke-width: 0.6; stroke-linejoin: round; transition: opacity .15s; }
+  svg.foco .ruta:not(.activa) { opacity: 0.12; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Visor de rutas</h1>
+  <div id="resumen">Carga un JSON de solución (el que escribe <code>ruteo resolver --salida</code>).</div>
+  <p><input type="file" id="archivo" accept="application/json,.json"></p>
+  <svg id="lienzo" viewBox="0 0 100 100" role="img" aria-label="Mapa de rutas"></svg>
+  <ol id="rutas"></ol>
+</main>
+<script id="datos" type="application/json"></script>
+<script>
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("lienzo");
+const color = (k) => `hsl(${(k * 137.508) % 360} 62% 46%)`;
+
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+  return e;
+}
+
+function dibujar(sol) {
+  svg.replaceChildren();
+  const lista = document.getElementById("rutas");
+  lista.replaceChildren();
+  const nodos = new Map(sol.nodos.map((n) => [n.id, n]));
+  const xs = sol.nodos.map((n) => n.x), ys = sol.nodos.map((n) => n.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const lado = Math.max(maxX - minX, maxY - minY, 1), m = lado * 0.05;
+  svg.setAttribute("viewBox", `${minX - m} ${-(maxY + m)} ${lado + 2 * m} ${lado + 2 * m}`);
+  const esc = lado / 100;
+  const p = (id) => { const n = nodos.get(id); return `${n.x},${-n.y}`; };
+
+  sol.rutas.forEach((ruta, k) => {
+    const linea = el("polyline", { class: "ruta", points: [0, ...ruta, 0].map(p).join(" "), stroke: color(k), "stroke-width": 0.6 * esc });
+    linea.dataset.k = k;
+    svg.append(linea);
+  });
+  for (const n of sol.nodos) {
+    if (n.id === 0) {
+      svg.append(el("rect", { x: n.x - 1.6 * esc, y: -n.y - 1.6 * esc, width: 3.2 * esc, height: 3.2 * esc, fill: "currentColor" }));
+    } else {
+      const c = el("circle", { cx: n.x, cy: -n.y, r: 0.9 * esc, fill: "currentColor", opacity: 0.75 });
+      const t = el("title", {});
+      t.textContent = `cliente ${n.id}: demanda ${n.demanda}, ventana [${n.inicio}, ${n.fin}]`;
+      c.append(t);
+      svg.append(c);
+    }
+  }
+  svg.style.color = getComputedStyle(document.body).color;
+
+  sol.rutas.forEach((ruta, k) => {
+    const li = document.createElement("li");
+    const carga = ruta.reduce((a, id) => a + nodos.get(id).demanda, 0);
+    const muestra = document.createElement("span");
+    muestra.className = "muestra";
+    muestra.style.background = color(k);
+    li.append(muestra, `${ruta.length} clientes, carga ${carga}: ${ruta.join(" ")}`);
+    li.addEventListener("mouseenter", () => {
+      svg.classList.add("foco");
+      svg.querySelector(`.ruta[data-k="${k}"]`).classList.add("activa");
+    });
+    li.addEventListener("mouseleave", () => {
+      svg.classList.remove("foco");
+      svg.querySelectorAll(".activa").forEach((x) => x.classList.remove("activa"));
+    });
+    lista.append(li);
+  });
+
+  const r = document.getElementById("resumen");
+  r.textContent = `${sol.instancia} · método ${sol.metodo} · ${sol.vehiculos} vehículos · distancia ${sol.distancia} · `;
+  const estado = document.createElement("span");
+  estado.textContent = sol.valida ? "verificada" : `INVÁLIDA: ${sol.errores.join("; ")}`;
+  if (!sol.valida) estado.className = "error";
+  r.append(estado);
+}
+
+document.getElementById("archivo").addEventListener("change", async (ev) => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  try { dibujar(JSON.parse(await f.text())); }
+  catch (e) { document.getElementById("resumen").textContent = `No se pudo leer el archivo: ${e.message}`; }
+});
+
+const incrustado = document.getElementById("datos").textContent.trim();
+if (incrustado) dibujar(JSON.parse(incrustado));
+</script>
+</body>
+</html>

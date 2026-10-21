@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Visor de rutas</title>
+<style>
+  :root { --fondo: #fafaf8; --texto: #222; --suave: #777; --borde: #ddd; }
+  @media (prefers-color-scheme: dark) { :root { --fondo: #1b1b1d; --texto: #eee; --suave: #999; --borde: #333; } }
+  body { margin: 0; font: 14px/1.4 system-ui, sans-serif; background: var(--fondo); color: var(--texto); }
+  main { max-width: 980px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  #resumen { color: var(--suave); margin-bottom: 12px; }
+  #lienzo { width: 100%; height: auto; border: 1px solid var(--borde); border-radius: 8px; background: var(--fondo); }
+  #rutas { columns: 2 260px; padding-left: 18px; font-variant-numeric: tabular-nums; }
+  #rutas li { break-inside: avoid; margin-bottom: 4px; cursor: default; }
+  .muestra { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; }
+  .error { color: #b00020; }
+  svg .ruta { fill: none; stroke-width: 0.6; stroke-linejoin: round; transition: opacity .15s; }
+  svg.foco .ruta:not(.activa) { opacity: 0.12; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Visor de rutas</h1>
+  <div id="resumen">Carga un JSON de solución (el que escribe <code>ruteo resolver --salida</code>).</div>
+  <p><input type="file" id="archivo" accept="application/json,.json"></p>
+  <svg id="lienzo" viewBox="0 0 100 100" role="img" aria-label="Mapa de rutas"></svg>
+  <ol id="rutas"></ol>
+</main>
+<script id="datos" type="application/json">{"instancia":"RC-100-s1","metodo":"alns","vehiculos":16,"distancia":1969.24,"valida":true,"errores":[],"rutas":[[59,77,89,46,63,78],[54,79,82,28,15,35,44],[85,55,4,53,51,60],[1,52,30,99,7,76,67,88],[97,65,25,80,16],[23,11,32,3,5,39],[22,62,86,29,24,100],[42,36,47,6,70,57,94,92,48],[72,13,61,41,2,90,10],[12,49,87,91,93,71],[31,96,20,14,50,34,58,18],[40,84,75,69,38,8],[74,37,27,83,95,66,9,56],[68,43,73,98],[17,45,21,19],[26,64,81,33]],"nodos":[{"id":0,"x":50,"y":50,"demanda":0,"inicio":0,"fin":230},{"id":1,"x":28,"y":19,"demanda":26,"inicio":31,"fin":59},{"id":2,"x":27,"y":17,"demanda":32,"inicio":116,"fin":148},{"id":3,"x":19,"y":72,"demanda":40,"inicio":84,"fin":122},{"id":4,"x":92,"y":26,"demanda":13,"inicio":74,"fin":102},{"id":5,"x":15,"y":73,"demanda":14,"inicio":111,"fin":129},{"id":6,"x":62,"y":16,"demanda":30,"inicio":50,"fin":94},{"id":7,"x":40,"y":30,"demanda":38,"inicio":119,"fin":163},{"id":8,"x":28,"y":48,"demanda":6,"inicio":177,"fin":195},{"id":9,"x":87,"y":29,"demanda":38,"inicio":146,"fin":176},{"id":10,"x":24,"y":25,"demanda":40,"inicio":167,"fin":183},{"id":11,"x":16,"y":39,"demanda":16,"inicio":39,"fin":67},{"id":12,"x":21,"y":43,"demanda":35,"inicio":22,"fin":62},{"id":13,"x":27,"y":16,"demanda":15,"inicio":62,"fin":104},{"id":14,"x":55,"y":90,"demanda":10,"inicio":77,"fin":95},{"id":15,"x":6,"y":30,"demanda":9,"inicio":115,"fin":149},{"id":16,"x":46,"y":44,"demanda":40,"inicio":159,"fin":181},{"id":17,"x":96,"y":87,"demanda":6,"inicio":50,"fin":70},{"id":18,"x":38,"y":76,"demanda":14,"inicio":161,"fin":179},{"id":19,"x":87,"y":80,"demanda":8,"inicio":135,"fin":157},{"id":20,"x":50,"y":90,"demanda":16,"inicio":59,"fin":101},{"id":21,"x":91,"y":87,"demanda":13,"inicio":106,"fin":142},{"id":22,"x":56,"y":63,"demanda":39,"inicio":44,"fin":86},{"id":23,"x":16,"y":33,"demanda":33,"inicio":41,"fin":57},{"id":24,"x":55,"y":62,"demanda":37,"inicio":161,"fin":185},{"id":25,"x":53,"y":43,"demanda":13,"inicio":135,"fin":161},{"id":26,"x":50,"y":54,"demanda":27,"inicio":3,"fin":25},{"id":27,"x":65,"y":3,"demanda":36,"inicio":75,"fin":103},{"id":28,"x":19,"y":40,"demanda":38,"inicio":118,"fin":134},{"id":29,"x":54,"y":57,"demanda":7,"inicio":130,"fin":148},{"id":30,"x":43,"y":19,"demanda":15,"inicio":58,"fin":92},{"id":31,"x":55,"y":93,"demanda":11,"inicio":44,"fin":62},{"id":32,"x":13,"y":42,"demanda":14,"inicio":74,"fin":112},{"id":33,"x":8,"y":100,"demanda":35,"inicio":145,"fin":154},{"id":34,"x":50,"y":91,"demanda":30,"inicio":100,"fin":126},{"id":35,"x":13,"y":28,"demanda":24,"inicio":155,"fin":176},{"id":36,"x":54,"y":12,"demanda":28,"inicio":62,"fin":82},{"id":37,"x":61,"y":1,"demanda":19,"inicio":51,"fin":67},{"id":38,"x":24,"y":47,"demanda":39,"inicio":116,"fin":152},{"id":39,"x":2,"y":87,"demanda":34,"inicio":144,"fin":159},{"id":40,"x":47,"y":47,"demanda":29,"inicio":18,"fin":36},{"id":41,"x":37,"y":1,"demanda":29,"inicio":95,"fin":127},{"id":42,"x":49,"y":20,"demanda":31,"inicio":28,"fin":54},{"id":43,"x":20,"y":88,"demanda":11,"inicio":136,"fin":154},{"id":44,"x":22,"y":27,"demanda":37,"inicio":164,"fin":183},{"id":45,"x":85,"y":63,"demanda":20,"inicio":89,"fin":121},{"id":46,"x":82,"y":39,"demanda":26,"inicio":124,"fin":140},{"id":47,"x":59,"y":15,"demanda":14,"inicio":37,"fin":81},{"id":48,"x":60,"y":7,"demanda":22,"inicio":155,"fin":175},{"id":49,"x":0,"y":63,"demanda":40,"inicio":36,"fin":74},{"id":50,"x":55,"y":96,"demanda":19,"inicio":105,"fin":137},{"id":51,"x":62,"y":57,"demanda":19,"inicio":144,"fin":186},{"id":52,"x":34,"y":18,"demanda":18,"inicio":38,"fin":80},{"id":53,"x":96,"y":51,"demanda":9,"inicio":114,"fin":142},{"id":54,"x":32,"y":27,"demanda":33,"inicio":41,"fin":57},{"id":55,"x":78,"y":22,"demanda":6,"inicio":65,"fin":103},{"id":56,"x":80,"y":29,"demanda":19,"inicio":162,"fin":183},{"id":57,"x":67,"y":14,"demanda":28,"inicio":111,"fin":149},{"id":58,"x":37,"y":88,"demanda":37,"inicio":154,"fin":179},{"id":59,"x":100,"y":61,"demanda":27,"inicio":58,"fin":92},{"id":60,"x":53,"y":47,"demanda":21,"inicio":189,"fin":205},{"id":61,"x":24,"y":1,"demanda":33,"inicio":96,"fin":124},{"id":62,"x":64,"y":75,"demanda":24,"inicio":88,"fin":108},{"id":63,"x":54,"y":37,"demanda":23,"inicio":182,"fin":206},{"id":64,"x":36,"y":88,"demanda":6,"inicio":52,"fin":84},{"id":65,"x":56,"y":34,"demanda":9,"inicio":110,"fin":132},{"id":66,"x":85,"y":28,"demanda":7,"inicio":112,"fin":144},{"id":67,"x":39,"y":17,"demanda":12,"inicio":137,"fin":169},{"id":68,"x":36,"y":84,"demanda":40,"inicio":73,"fin":105},{"id":69,"x":37,"y":61,"demanda":19,"inicio":99,"fin":127},{"id":70,"x":62,"y":13,"demanda":16,"inicio":102,"fin":118},{"id":71,"x":8,"y":63,"demanda":22,"inicio":154,"fin":176},{"id":72,"x":30,"y":14,"demanda":6,"inicio":56,"fin":98},{"id":73,"x":34,"y":84,"demanda":32,"inicio":149,"fin":175},{"id":74,"x":51,"y":10,"demanda":27,"inicio":39,"fin":59},{"id":75,"x":48,"y":51,"demanda":27,"inicio":88,"fin":112},{"id":76,"x":35,"y":15,"demanda":17,"inicio":148,"fin":180},{"id":77,"x":88,"y":51,"demanda":34,"inicio":76,"fin":102},{"id":78,"x":52,"y":44,"demanda":31,"inicio":177,"fin":205},{"id":79,"x":13,"y":29,"demanda":18,"inicio":68,"fin":104},{"id":80,"x":45,"y":46,"demanda":40,"inicio":135,"fin":171},{"id":81,"x":7,"y":98,"demanda":18,"inicio":82,"fin":100},{"id":82,"x":19,"y":43,"demanda":37,"inicio":71,"fin":107},{"id":83,"x":75,"y":9,"demanda":11,"inicio":77,"fin":101},{"id":84,"x":38,"y":42,"demanda":15,"inicio":63,"fin":91},{"id":85,"x":67,"y":23,"demanda":24,"inicio":21,"fin":55},{"id":86,"x":46,"y":70,"demanda":28,"inicio":92,"fin":124},{"id":87,"x":7,"y":64,"demanda":32,"inicio":81,"fin":103},{"id":88,"x":46,"y":19,"demanda":35,"inicio":149,"fin":188},{"id":89,"x":83,"y":44,"demanda":37,"inicio":86,"fin":108},{"id":90,"x":22,"y":18,"demanda":32,"inicio":139,"fin":173},{"id":91,"x":0,"y":64,"demanda":13,"inicio":111,"fin":127},{"id":92,"x":64,"y":3,"demanda":18,"inicio":147,"fin":167},{"id":93,"x":4,"y":63,"demanda":38,"inicio":113,"fin":153},{"id":94,"x":67,"y":13,"demanda":6,"inicio":114,"fin":138},{"id":95,"x":81,"y":19,"demanda":15,"inicio":113,"fin":155},{"id":96,"x":52,"y":96,"demanda":8,"inicio":43,"fin":81},{"id":97,"x":56,"y":36,"demanda":11,"inicio":38,"fin":56},{"id":98,"x":45,"y":84,"demanda":6,"inicio":165,"fin":185},{"id":99,"x":44,"y":20,"demanda":27,"inicio":77,"fin":93},{"id":100,"x":49,"y":67,"demanda":13,"inicio":147,"fin":179}]}</script>
+<script>
+"use strict";
+const NS = "http://www.w3.org/2000/svg";
+const svg = document.getElementById("lienzo");
+const color = (k) => `hsl(${(k * 137.508) % 360} 62% 46%)`;
+
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, String(v));
+  return e;
+}
+
+function dibujar(sol) {
+  svg.replaceChildren();
+  const lista = document.getElementById("rutas");
+  lista.replaceChildren();
+  const nodos = new Map(sol.nodos.map((n) => [n.id, n]));
+  const xs = sol.nodos.map((n) => n.x), ys = sol.nodos.map((n) => n.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const lado = Math.max(maxX - minX, maxY - minY, 1), m = lado * 0.05;
+  svg.setAttribute("viewBox", `${minX - m} ${-(maxY + m)} ${lado + 2 * m} ${lado + 2 * m}`);
+  const esc = lado / 100;
+  const p = (id) => { const n = nodos.get(id); return `${n.x},${-n.y}`; };
+
+  sol.rutas.forEach((ruta, k) => {
+    const linea = el("polyline", { class: "ruta", points: [0, ...ruta, 0].map(p).join(" "), stroke: color(k), "stroke-width": 0.6 * esc });
+    linea.dataset.k = k;
+    svg.append(linea);
+  });
+  for (const n of sol.nodos) {
+    if (n.id === 0) {
+      svg.append(el("rect", { x: n.x - 1.6 * esc, y: -n.y - 1.6 * esc, width: 3.2 * esc, height: 3.2 * esc, fill: "currentColor" }));
+    } else {
+      const c = el("circle", { cx: n.x, cy: -n.y, r: 0.9 * esc, fill: "currentColor", opacity: 0.75 });
+      const t = el("title", {});
+      t.textContent = `cliente ${n.id}: demanda ${n.demanda}, ventana [${n.inicio}, ${n.fin}]`;
+      c.append(t);
+      svg.append(c);
+    }
+  }
+  svg.style.color = getComputedStyle(document.body).color;
+
+  sol.rutas.forEach((ruta, k) => {
+    const li = document.createElement("li");
+    const carga = ruta.reduce((a, id) => a + nodos.get(id).demanda, 0);
+    const muestra = document.createElement("span");
+    muestra.className = "muestra";
+    muestra.style.background = color(k);
+    li.append(muestra, `${ruta.length} clientes, carga ${carga}: ${ruta.join(" ")}`);
+    li.addEventListener("mouseenter", () => {
+      svg.classList.add("foco");
+      svg.querySelector(`.ruta[data-k="${k}"]`).classList.add("activa");
+    });
+    li.addEventListener("mouseleave", () => {
+      svg.classList.remove("foco");
+      svg.querySelectorAll(".activa").forEach((x) => x.classList.remove("activa"));
+    });
+    lista.append(li);
+  });
+
+  const r = document.getElementById("resumen");
+  r.textContent = `${sol.instancia} · método ${sol.metodo} · ${sol.vehiculos} vehículos · distancia ${sol.distancia} · `;
+  const estado = document.createElement("span");
+  estado.textContent = sol.valida ? "verificada" : `INVÁLIDA: ${sol.errores.join("; ")}`;
+  if (!sol.valida) estado.className = "error";
+  r.append(estado);
+}
+
+document.getElementById("archivo").addEventListener("change", async (ev) => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  try { dibujar(JSON.parse(await f.text())); }
+  catch (e) { document.getElementById("resumen").textContent = `No se pudo leer el archivo: ${e.message}`; }
+});
+
+const incrustado = document.getElementById("datos").textContent.trim();
+if (incrustado) dibujar(JSON.parse(incrustado));
+</script>
+</body>
+</html>
