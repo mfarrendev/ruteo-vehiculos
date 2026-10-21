@@ -1,0 +1,32 @@
+{
+  "name": "ruteo-vehiculos",
+  "version": "0.1.0",
+  "description": "Solver de ruteo de vehículos con capacidad y ventanas de tiempo (CVRPTW) en TypeScript, sin dependencias de runtime.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Max Farren",
+  "engines": {
+    "node": ">=24"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "ruteo": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "resolver": "node dist/cli.js",
+    "benchmark": "node dist/benchmark.js",
+    "ejemplo": "node dist/ejemplo.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "~5.9.3",
+    "vitest": "^4.1.12"
+  }
+}
