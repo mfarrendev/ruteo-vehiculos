@@ -1,0 +1,12 @@
+export { crearAleatorio, type Aleatorio } from "./aleatorio.js";
+export { crearInstancia, type Instancia, type Nodo } from "./instancia.js";
+export { parsearSolomon, serializarSolomon } from "./solomon.js";
+export { generarInstancia, type Familia, type OpcionesGenerador } from "./generador.js";
+export { verificar, type Solucion, type Verificacion } from "./verificador.js";
+export { ahorros } from "./construccion/ahorros.js";
+export { insercionI1, insercionI1Mejor, PARAMETROS_I1, type ParametrosI1 } from "./construccion/insercion.js";
+export { busquedaLocal, OPERADORES, type Operador } from "./mejora/busqueda-local.js";
+export { alns, type OpcionesAlns, type ResultadoAlns } from "./mejora/alns.js";
+export { optimoExacto } from "./exacto.js";
+export { resolver, type Metodo, type OpcionesSolver } from "./solver.js";
+export { costo, distanciaTotal, vehiculos } from "./solucion.js";
